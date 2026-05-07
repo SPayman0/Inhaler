@@ -1,0 +1,239 @@
+import asyncio 
+
+from bleak import BleakScanner, BleakClient 
+
+from AWSIoTPythonSDK.MQTTLib import AWSIoTMQTTClient 
+
+import json 
+
+from datetime import datetime 
+
+import time 
+
+  
+
+# ---------------- AWS SETTINGS ---------------- 
+
+host = "a3klnf50bm0zxd-ats.iot.us-east-2.amazonaws.com" 
+
+rootCAPath = "/home/sampayman/awsvenv/cert/RootCA1.pem" 
+
+certPath = "/home/sampayman/awsvenv/cert/RaspberryPi-cert.pem.crt" 
+
+keyPath = "/home/sampayman/awsvenv/cert/RaspberryPi-private.pem.key" 
+
+clientId = "RaspberryPi-Sam" 
+
+  
+
+TOPIC_BUTTON = "inhaler/button" 
+
+TOPIC_GPS = "inhaler/gps" 
+
+  
+
+# ---------------- BLE ---------------- 
+
+TARGET_NAME = "Pico2W" 
+
+TX_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E" 
+
+  
+
+# ---------------- STATE ---------------- 
+
+count = 200 
+
+lat = None 
+
+lon = None 
+
+  
+
+# ---------------- AWS MQTT ---------------- 
+
+client = AWSIoTMQTTClient(clientId) 
+
+client.configureEndpoint(host, 8883) 
+
+client.configureCredentials(rootCAPath, keyPath, certPath) 
+
+  
+
+client.configureAutoReconnectBackoffTime(1, 32, 20) 
+
+client.configureOfflinePublishQueueing(-1) 
+
+client.configureDrainingFrequency(2) 
+
+client.configureConnectDisconnectTimeout(10) 
+
+client.configureMQTTOperationTimeout(5) 
+
+  
+
+client.connect() 
+
+  
+
+# ---------------- BUTTON EVENT ---------------- 
+
+def send_button(): 
+
+    global count, lat, lon 
+
+  
+
+    count -= 1 
+
+  
+
+    payload = { 
+
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+
+        "pressed": True, 
+
+        "count": count,
+
+    } 
+
+  
+
+    client.publish(TOPIC_BUTTON, json.dumps(payload), 1) 
+
+    print("🔥 BUTTON → AWS:", payload) 
+
+  
+
+# ---------------- GPS EVENT ---------------- 
+
+def send_gps(): 
+    payload = { 
+        "deviceId": clientId,                    # ← add this
+        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"), 
+        "lat": float(lat),                        # ← cast to float
+        "lon": float(lon)                         # ← cast to float
+    } 
+    client.publish(TOPIC_GPS, json.dumps(payload), 1) 
+    print("📡 GPS → AWS:", payload)
+
+# ---------------- BLE HANDLER ---------------- 
+
+def handle_ble(msg): 
+
+    global lat, lon 
+
+  
+
+    try: 
+
+        msg = msg.decode() 
+
+        print("[BLE]", msg) 
+
+  
+
+        parts = msg.split(",") 
+
+  
+
+        # ---------------- BUTTON ---------------- 
+
+        if msg.startswith("BTN"): 
+
+            lat = parts[1].split("=")[1] 
+
+            lon = parts[2].split("=")[1] 
+
+            send_button() 
+
+  
+
+        # ---------------- GPS ---------------- 
+
+        elif msg.startswith("GPS"): 
+
+            lat = parts[1].split("=")[1] 
+
+            lon = parts[2].split("=")[1] 
+
+            send_gps() 
+
+  
+
+    except Exception as e: 
+
+        print("Parse error:", e) 
+
+  
+
+# ---------------- BLE CALLBACK ---------------- 
+
+def notification_handler(sender, data): 
+
+    handle_ble(data) 
+
+  
+
+# ---------------- MAIN ---------------- 
+
+async def main(): 
+
+    print("Scanning for Pico...") 
+
+  
+
+    devices = await BleakScanner.discover() 
+
+  
+
+    target = None 
+
+    for d in devices: 
+
+        if TARGET_NAME in str(d): 
+
+            target = d 
+
+  
+
+    if not target: 
+
+        print("Pico not found") 
+
+        return 
+
+  
+
+    print("Connected:", target.address) 
+
+  
+
+    async with BleakClient(target.address) as client_ble: 
+
+        await client_ble.start_notify(TX_UUID, notification_handler) 
+
+  
+
+        print("Listening...") 
+
+  
+
+        while True: 
+
+            await asyncio.sleep(1) 
+
+  
+
+try: 
+
+    asyncio.run(main()) 
+
+  
+
+except KeyboardInterrupt: 
+
+    print("Stopping...") 
+
+    client.disconnect() 
