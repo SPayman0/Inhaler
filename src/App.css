@@ -61,3 +61,64 @@ input {
   padding: 10px;
   margin-top: 10px;
 }
+
+.map-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #4a90e2;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.map-link:hover {
+  text-decoration: underline;
+}
+
+.timestamp {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+}
+
+.find-button {
+  margin-top: 10px;
+  padding: 12px 24px;
+  font-size: 1rem;
+  background-color: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  width: 100%;
+}
+
+.find-button:hover {
+  background-color: #c0392b;
+}
+
+.find-button:disabled {
+  background-color: #aaa;
+  cursor: not-allowed;
+}
+
+.inhaler-result {
+  margin-top: 14px;
+}
+
+.map-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: #4a90e2;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.map-link:hover {
+  text-decoration: underline;
+}
+
+.timestamp {
+  font-size: 0.8rem;
+  color: #888;
+  margin-top: 4px;
+}
