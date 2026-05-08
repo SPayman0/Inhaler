@@ -1,0 +1,50 @@
+import json
+import boto3
+
+dynamodb = boto3.client("dynamodb", region_name="us-east-2")
+TABLE_NAME = "gpsData"
+
+def lambda_handler(event, context):
+
+    print("EVENT:", event)
+
+    params = event.get("queryStringParameters")
+
+    if not params or "deviceId" not in params:
+        return {
+            "statusCode": 400,
+            "headers": {"Access-Control-Allow-Origin": "*"},
+            "body": json.dumps({"error": "Missing deviceId"})
+        }
+
+    device_id = params["deviceId"]
+
+    res = dynamodb.query(
+        TableName=TABLE_NAME,
+        KeyConditionExpression="deviceId = :d",
+        ExpressionAttributeValues={
+            ":d": {"S": device_id}
+        },
+        ScanIndexForward=False,
+        Limit=1
+    )
+
+    if not res["Items"]:
+        return {
+            "statusCode": 404,
+            "headers": {"Access-Control-Allow-Origin": "*"},
+            "body": json.dumps({"error": "No data"})
+        }
+
+    item = res["Items"][0]
+
+    return {
+        "statusCode": 200,
+        "headers": {"Access-Control-Allow-Origin": "*"},
+        "body": json.dumps({
+            "deviceId":  item.get("deviceId",  {}).get("S", "unknown"),
+            "timestamp": item.get("timestamp", {}).get("S", "unknown"),
+            "latitude":  float(item.get("lat",  {}).get("N", 0)),
+            "longitude": float(item.get("lon",  {}).get("N", 0))
+        })
+    }

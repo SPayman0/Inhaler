@@ -1,0 +1,24 @@
+import json
+import boto3
+from decimal import Decimal
+
+db = boto3.resource('dynamodb')
+table = db.Table('InhalerData')
+
+def lambda_handler(event, context):
+    print("Event:", event)
+
+    response = table.get_item(Key={'id': 'main'})
+    item = response.get('Item', {})
+    current_count = int(item.get('count', 200))  # Decimal → int
+
+    print("Count:", current_count)
+
+    return {
+        'statusCode': 200,
+        'headers': {
+            'Access-Control-Allow-Origin': '*',
+            'Content-Type': 'application/json'
+        },
+        'body': json.dumps({'count': current_count})
+    }

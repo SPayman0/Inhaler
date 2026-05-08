@@ -1,0 +1,32 @@
+import json
+import boto3
+from datetime import datetime
+
+dynamodb = boto3.client("dynamodb", region_name="us-east-2")
+TABLE_NAME = "gpsData"
+
+def lambda_handler(event, context):
+    print("EVENT:", json.dumps(event))
+
+    try:
+        # IoT Core passes the payload directly as the event
+        device_id = event.get("deviceId", "unknown")
+        timestamp = event.get("timestamp", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        lat = str(event.get("lat", 0))
+        lon = str(event.get("lon", 0))
+
+        dynamodb.put_item(
+            TableName=TABLE_NAME,
+            Item={
+                "deviceId":  {"S": device_id},
+                "timestamp": {"S": timestamp},
+                "lat":       {"N": lat},
+                "lon":       {"N": lon}
+            }
+        )
+
+            return {"statusCode": 200, "body": "OK"}
+
+    except Exception as e:
+        print("ERROR:", str(e))
+        return {"statusCode": 500, "body": str(e)}

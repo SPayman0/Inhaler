@@ -1,0 +1,43 @@
+import json
+import boto3
+from boto3.dynamodb.conditions import Attr
+from botocore.exceptions import ClientError
+
+db = boto3.resource('dynamodb')
+table = db.Table('InhalerData')
+
+def lambda_handler(event, context):
+    print("Event:", event)
+    
+    new_count = event.get('count', 0)
+    
+    # Get current stored count
+    response = table.get_item(Key={'id': 'main'})
+    item = response.get('Item', {})
+    stored_count = int(item.get('count', 0))
+    
+    print(f"Stored: {stored_count}, Incoming: {new_count}")
+    
+    # If incoming count is HIGHER than stored, it's a reset — allow it
+    # If incoming count is LOWER than stored, normal puff — allow it
+    # Only skip if counts are equal (duplicate message)
+    if new_count == stored_count:
+        print("Skipping duplicate")
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'skipped': True, 'count': new_count})
+        }
+    
+    table.update_item(
+        Key={'id': 'main'},
+        UpdateExpression='SET #c = :new_count',
+        ExpressionAttributeNames={'#c': 'count'},
+        ExpressionAttributeValues={':new_count': new_count}
+    )
+    
+    print(f"Updated count to {new_count}")
+    
+    return {
+        'statusCode': 200,
+        'body': json.dumps({'count': new_count})
+    }
