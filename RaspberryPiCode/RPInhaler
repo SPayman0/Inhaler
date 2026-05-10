@@ -14,7 +14,7 @@ import time
 
 # ---------------- AWS SETTINGS ---------------- 
 
-# Fill with your own AWS settings after following the guids
+# Fill with your own AWS settings after following the guides
 host = "" 
 
 rootCAPath = "" 
