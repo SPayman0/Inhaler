@@ -14,15 +14,16 @@ import time
 
 # ---------------- AWS SETTINGS ---------------- 
 
-host = "a3klnf50bm0zxd-ats.iot.us-east-2.amazonaws.com" 
+# Fill with your own AWS settings after following the guids
+host = "" 
 
-rootCAPath = "/home/sampayman/awsvenv/cert/RootCA1.pem" 
+rootCAPath = "" 
 
-certPath = "/home/sampayman/awsvenv/cert/RaspberryPi-cert.pem.crt" 
+certPath = "" 
 
-keyPath = "/home/sampayman/awsvenv/cert/RaspberryPi-private.pem.key" 
+keyPath = "" 
 
-clientId = "RaspberryPi-Sam" 
+clientId = "" #Name of your RPi
 
   
 
@@ -33,10 +34,10 @@ TOPIC_GPS = "inhaler/gps"
   
 
 # ---------------- BLE ---------------- 
-
+# Should be your device settings and BLE protocol
 TARGET_NAME = "Pico2W" 
 
-TX_UUID = "6E400003-B5A3-F393-E0A9-E50E24DCCA9E" 
+TX_UUID = "" 
 
   
 
