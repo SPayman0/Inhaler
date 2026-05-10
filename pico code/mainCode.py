@@ -22,9 +22,10 @@ conn_handle = None
 ble_ready = False
 
 # ---------------- UUIDs (NUS) ----------------
-_UART_UUID = bluetooth.UUID("6E400001-B5A3-F393-E0A9-E50E24DCCA9E")
-_UART_TX = bluetooth.UUID("6E400003-B5A3-F393-E0A9-E50E24DCCA9E")
-_UART_RX = bluetooth.UUID("6E400002-B5A3-F393-E0A9-E50E24DCCA9E")
+# Fill with your device's BLE protocols
+_UART_UUID = bluetooth.UUID("")
+_UART_TX = bluetooth.UUID("")
+_UART_RX = bluetooth.UUID("")
 
 _UART_SERVICE = (
     _UART_UUID,
